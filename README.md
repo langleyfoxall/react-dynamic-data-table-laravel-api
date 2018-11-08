@@ -22,15 +22,15 @@ use Illuminate\Http\Request;
 use LangleyFoxall\ReactDynamicDataTableLaravelApi\DataTableResponder;
 
 class UsersController extends Controller
-{
-	public function dataTable(Request $request)
-	{
-		return (new DataTableResponder(User::class, $request))
-            ->query(function($query) {  // Optional, default: none
-                $query->where('name', 'like', 'B%');
-            })
-			->setPerPage(10)            // Optional, default: 15
-			->respond();
-	}
+    {
+        public function dataTable(Request $request)
+        {
+            return (new DataTableResponder(User::class, $request))
+                ->query(function($query) {  // Optional, default: none
+                    $query->where('name', 'like', 'B%');
+                })
+                ->setPerPage(10)            // Optional, default: 15
+                ->respond();
+    }
 }
 ```
