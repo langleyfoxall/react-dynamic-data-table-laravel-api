@@ -26,9 +26,8 @@ class UsersController extends Controller
 	public function dataTable(Request $request)
 	{
 		return (new DataTableResponder(User::class, $request))
-			->setPerPage(10)
+			->setPerPage(10)    // Optional, default: 15
 			->respond();
 	}
 }
-
 ```
