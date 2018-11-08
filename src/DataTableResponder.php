@@ -22,6 +22,11 @@ class DataTableResponder
     private $request;
 
     /**
+     * @var callable
+     */
+    private $queryManipulator;
+
+    /**
      * @var int
      */
     private $perPage = 15;
@@ -59,6 +64,18 @@ class DataTableResponder
     }
 
     /**
+     * Sets the callable used to manipulate the model query.
+     *
+     * @param callable $queryManipulator
+     * @return DataTableResponder
+     */
+    public function query(callable $queryManipulator)
+    {
+        $this->queryManipulator = $queryManipulator;
+        return $this;
+    }
+
+    /**
      * Builds the Eloquent query based on the request.
      *
      * @param Request $request
@@ -73,6 +90,11 @@ class DataTableResponder
 
         if ($orderByField && $orderByDirection) {
             $query->orderBy($orderByField, $orderByDirection);
+        }
+
+        $queryManipulator = $this->queryManipulator;
+        if ($queryManipulator) {
+            $queryManipulator($query);
         }
 
         return $query;
