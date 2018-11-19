@@ -2,7 +2,7 @@
 namespace LangleyFoxall\ReactDynamicDataTableLaravelApi;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 /**
@@ -43,12 +43,12 @@ class DataTableResponder
             throw new \InvalidArgumentException('Provided class does not exist.');
         }
 
-        if (!$className instanceof Model) {
-            throw new \InvalidArgumentException('Provided class is not an Eloquent model.');
-        }
-
         $this->model = new $className();
         $this->request = $request;
+
+        if (!$this->model instanceof Model) {
+            throw new \InvalidArgumentException('Provided class is not an Eloquent model.');
+        }
     }
 
     /**
