@@ -27,6 +27,11 @@ class DataTableResponder
     private $queryManipulator;
 
     /**
+     * @var callable
+     */
+    private $collectionManipulator;
+
+    /**
      * @var int
      */
     private $perPage = 15;
@@ -76,6 +81,18 @@ class DataTableResponder
     }
 
     /**
+     * Sets the callable used to manipulate the query results collection
+     * 
+     * @param callable $collectionManipulator
+     * @return DataTableResponder
+     */
+    public function collectionManipulator(callable $collectionManipulator)
+    {
+        $this->collectionManipulator = $collectionManipulator;
+        return $this;
+    }
+
+    /**
      * Builds the Eloquent query based on the request.
      *
      * @param Request $request
@@ -110,12 +127,34 @@ class DataTableResponder
     }
 
     /**
+     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $results
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    private function manipulateCollection($results)
+    {
+        $collection = $results->getCollection();
+        $manipulator = $this->collectionManipulator;
+
+        if ($manipulator) {
+            $manipulated = $manipulator($collection);
+
+            if ($manipulated) {
+                $results->setCollection($manipulated);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * @return \Illuminate\Http\JsonResponse
      */
     public function respond()
     {
         $query = $this->buildQuery($this->request);
+
         $results = $this->paginateQuery($query);
+        $results = $this->manipulateCollection($results);
 
         return DataTableResponse::success($results)->json();
     }
