@@ -89,7 +89,6 @@ class DataTableResponder
     public function collectionManipulator(callable $collectionManipulator)
     {
         $this->collectionManipulator = $collectionManipulator;
-
         return $this;
     }
 
@@ -128,7 +127,7 @@ class DataTableResponder
     }
 
     /**
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator $results
+     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $results
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     private function manipulateCollection($results)
