@@ -14,7 +14,7 @@ composer require langleyfoxall/react-dynamic-data-table-laravel-api
 
 First, create a new route in your API routes file for the data table response, and point it to a controller.
 
-In this controller method, create a new `DataTableResponder` passing it the model you wish to return data about, and the provided instance of the `Request` object. You can optionally specify changes to the query (such as sorting, or filtering) using the `query` method. If you want to alter the data before it gets return, such as loading relationships or appending custom attributes you can take advantage of `collectionManipulator`. You can also change number of records shown per page with the `setPerPage` method.
+In this controller method, create a new `DataTableResponder` passing it the model you wish to return data about, and the provided instance of the `Request` object. You can optionally specify changes to the query (such as sorting, or filtering) using the `query` method. If you want to alter the data before it gets returned in some way, such as changing attribute values or appending custom attributes, you can take advantage of `collectionManipulator`. You can also change number of records shown per page with the `setPerPage` method.
 
 See the example usage below.
 
