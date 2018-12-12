@@ -128,13 +128,14 @@ class DataTableResponder
      */
     private function manipulateCollection($results)
     {
+        $collection = $results->getCollection();
         $manipulator = $this->collectionManipulator;
 
-        if($manipulator) {
-            $manipulated = $manipulator($results);
+        if ($manipulator) {
+            $manipulated = $manipulator($collection);
 
             if ($manipulated) {
-                return $manipulated;
+                $results->setCollection($manipulated);
             }
         }
 
