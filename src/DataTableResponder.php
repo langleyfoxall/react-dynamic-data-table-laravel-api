@@ -27,6 +27,11 @@ class DataTableResponder
     private $queryManipulator;
 
     /**
+     * @var callable
+     */
+    private $collectionManipulator;
+
+    /**
      * @var int
      */
     private $perPage = 15;
