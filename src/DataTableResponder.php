@@ -30,7 +30,7 @@ class DataTableResponder
     /**
      * @var array|callable[]
      */
-    private $orderByOverrides;
+    private $orderByOverrides = [];
 
     /**
      * @var callable
@@ -181,11 +181,11 @@ class DataTableResponder
         $customAttributes = [];
 
         foreach($methods as $method) {
-            if (!preg_match('/get(\w+)Attribute/', $method, $matches)) {
+            if (!preg_match('/^get(\w+)Attribute$/', $method, $matches)) {
                 continue;
             }
 
-            if (!empty($matches[1])) {
+            if (empty($matches[1])) {
                 continue;
             }
 
