@@ -27,6 +27,11 @@ class DataTableResponder
     private $queryManipulator;
 
     /**
+     * @var array|callable[]
+     */
+    private $orderByOverrides;
+
+    /**
      * @var callable
      */
     private $collectionManipulator;
@@ -81,6 +86,18 @@ class DataTableResponder
     }
 
     /**
+     * Sets the callable used to override the query order by logic
+     *
+     * @param array|callable[] $orderByOverride
+     * @return DataTableResponder
+     */
+    public function overrideOrderByLogic(array $orderByOverrides)
+    {
+        $this->orderByOverrides = $orderByOverrides;
+        return $this;
+    }
+
+    /**
      * Sets the callable used to manipulate the query results collection
      * 
      * @param callable $collectionManipulator
@@ -107,9 +124,17 @@ class DataTableResponder
 
         if ($orderByField && $orderByDirection) {
             $query->orderBy($orderByField, $orderByDirection);
+
+            if (in_array($orderByField, array_keys($this->orderByOverrides))) {
+                call_user_func_array(
+                    $this->orderByOverrides[$orderByField],
+                    [$query, $orderByDirection]
+                );
+            }
         }
 
         $queryManipulator = $this->queryManipulator;
+
         if ($queryManipulator) {
             $queryManipulator($query);
         }
@@ -147,6 +172,35 @@ class DataTableResponder
     }
 
     /**
+     * @return array|string[]
+     */
+    private function disallowOrderingBy()
+    {
+        $methods = get_class_methods($this->model);
+        $customAttributes = [];
+
+        foreach($methods as $method) {
+            if (!preg_match('/get(\w+)Attribute/', $method, $matches)) {
+                continue;
+            }
+
+            if (!empty($matches[1])) {
+                continue;
+            }
+
+            $customAttribute = Str::snake($matches[1]);
+
+            if (in_array($customAttribute, array_keys($this->orderByOverrides))) {
+                continue;
+            }
+
+            $customAttributes[] = $customAttribute;
+        }
+
+        return $customAttributes;
+    }
+
+    /**
      * @return \Illuminate\Http\JsonResponse
      */
     public function respond()
@@ -156,6 +210,8 @@ class DataTableResponder
         $results = $this->paginateQuery($query);
         $results = $this->manipulateCollection($results);
 
-        return DataTableResponse::success($results)->json();
+        $disallowOrderingBy = $this->disallowOrderingBy();
+
+        return DataTableResponse::success($results, compact('disallowOrderingBy'))->json();
     }
 }
