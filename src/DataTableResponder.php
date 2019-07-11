@@ -124,13 +124,13 @@ class DataTableResponder
         $query = $this->model->query();
 
         if ($orderByField && $orderByDirection) {
-            $query->orderBy($orderByField, $orderByDirection);
-
             if (in_array($orderByField, array_keys($this->orderByOverrides))) {
                 call_user_func_array(
                     $this->orderByOverrides[$orderByField],
                     [$query, $orderByDirection]
                 );
+            } else {
+                $query->orderBy($orderByField, $orderByDirection);
             }
         }
 
