@@ -100,7 +100,7 @@ class DataTableResponder
 
     /**
      * Sets the callable used to manipulate the query results collection
-     * 
+     *
      * @param callable $collectionManipulator
      * @return DataTableResponder
      */
