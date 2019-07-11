@@ -213,6 +213,6 @@ class DataTableResponder
 
         $disallowOrderingBy = $this->disallowOrderingBy();
 
-        return DataTableResponse::success($results, compact('disallowOrderingBy'))->json();
+        return DataTableResponse::success($results, ['disallow_ordering_by' => $disallowOrderingBy])->json();
     }
 }
