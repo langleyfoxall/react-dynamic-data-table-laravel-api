@@ -87,7 +87,7 @@ class DataTableResponder
     }
 
     /**
-     * Sets the callable used to override the query order by logic
+     * Sets the field name to callable mapping array used to override the query order by logic
      *
      * @param array|callable[] $orderByOverride
      * @return DataTableResponder
