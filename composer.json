@@ -3,7 +3,7 @@
     "description": "Provides a Laravel API endpoint responder for the `react-dynamic-data-table` component.",
     "require": {
         "php": "^7.0.0",
-        "laravel/framework": "^5.4||^6.0",
+        "laravel/framework": "^5.1||^6.0",
         "langleyfoxall/helpers-laravel": "^1.10"
     },
     "autoload": {
