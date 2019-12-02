@@ -196,16 +196,16 @@ class DataTableResponder
      * Make response meta
      * 
      * If a callable is given as an element value then
-     * the result collection is passed to it as the first
-     * parameter
+     * the query and collection as parameters
      * 
      * `disallow_ordering_by` will always be overwritten
      * as it is managed internally
      * 
+     * @param Builder $query
      * @param Collection $collection
      * @return array
      */
-    private function makeMeta(Collection $collection)
+    private function makeMeta(Builder $query, Collection $collection)
     {
         $meta = $this->meta;
         $out = [];
@@ -213,7 +213,7 @@ class DataTableResponder
         foreach($meta as $element => $value) {
             if (is_callable($value)) {
                 $out[$element] = call_user_func_array(
-                    $value, [$collection]
+                    $value, [$query, $collection]
                 );
 
                 continue;
@@ -265,7 +265,7 @@ class DataTableResponder
 
         $results = $this->paginateQuery($query);
         $results = $this->manipulateCollection($results);
-        $meta = $this->makeMeta($results->getCollection());
+        $meta = $this->makeMeta($query, $results->getCollection());
 
         return DataTableResponse::success($results, $meta)->json();
     }
