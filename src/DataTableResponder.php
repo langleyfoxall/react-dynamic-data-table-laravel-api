@@ -4,6 +4,7 @@ namespace LangleyFoxall\ReactDynamicDataTableLaravelApi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -41,6 +42,11 @@ class DataTableResponder
      * @var int
      */
     private $perPage = 15;
+
+    /**
+     * @var array
+     */
+    private $meta = [];
 
     /**
      * DataTableResponder constructor.
@@ -111,6 +117,20 @@ class DataTableResponder
     }
 
     /**
+     * Sets the meta for the API response
+     * 
+     * @see DataTableResponder::makeMeta
+     * 
+     * @param callable $collectionManipulator
+     * @return DataTableResponder
+     */
+    public function setResponseMeta(array $meta = [])
+    {
+        $this->meta = $meta;
+        return $this;
+    }
+
+    /**
      * Builds the Eloquent query based on the request.
      *
      * @param Request $request
@@ -173,6 +193,41 @@ class DataTableResponder
     }
 
     /**
+     * Make response meta
+     * 
+     * If a callable is given as an element value then
+     * the query and collection as parameters
+     * 
+     * `disallow_ordering_by` will always be overwritten
+     * as it is managed internally
+     * 
+     * @param Builder $query
+     * @param Collection $collection
+     * @return array
+     */
+    private function makeMeta(Builder $query, Collection $collection)
+    {
+        $meta = $this->meta;
+        $out = [];
+
+        foreach($meta as $element => $value) {
+            if (is_callable($value)) {
+                $out[$element] = call_user_func_array(
+                    $value, [$query, $collection]
+                );
+
+                continue;
+            }
+
+            $out[$element] = $value;
+        }
+
+        $out['disallow_ordering_by'] = $this->disallowOrderingBy();
+
+        return $out;
+    }
+
+    /**
      * @return array|string[]
      */
     private function disallowOrderingBy()
@@ -210,9 +265,8 @@ class DataTableResponder
 
         $results = $this->paginateQuery($query);
         $results = $this->manipulateCollection($results);
+        $meta = $this->makeMeta($query, $results->getCollection());
 
-        $disallowOrderingBy = $this->disallowOrderingBy();
-
-        return DataTableResponse::success($results, ['disallow_ordering_by' => $disallowOrderingBy])->json();
+        return DataTableResponse::success($results, $meta)->json();
     }
 }
