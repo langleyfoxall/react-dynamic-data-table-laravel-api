@@ -144,13 +144,13 @@ class DataTableResponder
         $orderByField = $request->get('orderByField');
         $orderByDirection = $request->get('orderByDirection');
 
-        if (!in_array(strtolower($orderByDirection), ['asc', 'desc'])) {
-            throw new InvalidArgumentException('Order by direction must be either asc or desc.');
-        }
-
         $query = $this->model->query();
 
         if ($orderByField && $orderByDirection) {
+            if (!in_array(strtolower($orderByDirection), ['asc', 'desc'])) {
+                throw new InvalidArgumentException('Order by direction must be either asc or desc.');
+            }
+
             if (in_array($orderByField, array_keys($this->orderByOverrides))) {
                 call_user_func_array(
                     $this->orderByOverrides[$orderByField],
