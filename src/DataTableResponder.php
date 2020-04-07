@@ -1,11 +1,14 @@
 <?php
 namespace LangleyFoxall\ReactDynamicDataTableLaravelApi;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Class DataTableResponder
@@ -57,14 +60,14 @@ class DataTableResponder
     public function __construct($className, Request $request)
     {
         if (!class_exists($className)) {
-            throw new \InvalidArgumentException('Provided class does not exist.');
+            throw new InvalidArgumentException('Provided class does not exist.');
         }
 
         $this->model = new $className();
         $this->request = $request;
 
         if (!$this->model instanceof Model) {
-            throw new \InvalidArgumentException('Provided class is not an Eloquent model.');
+            throw new InvalidArgumentException('Provided class is not an Eloquent model.');
         }
     }
 
@@ -118,9 +121,9 @@ class DataTableResponder
 
     /**
      * Sets the meta for the API response
-     * 
+     *
      * @see DataTableResponder::makeMeta
-     * 
+     *
      * @param callable $collectionManipulator
      * @return DataTableResponder
      */
@@ -134,12 +137,16 @@ class DataTableResponder
      * Builds the Eloquent query based on the request.
      *
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     private function buildQuery(Request $request)
     {
         $orderByField = $request->get('orderByField');
         $orderByDirection = $request->get('orderByDirection');
+
+        if (!in_array(strtolower($orderByDirection), ['asc', 'desc'])) {
+            throw new InvalidArgumentException('Order by direction must be either asc or desc.');
+        }
 
         $query = $this->model->query();
 
@@ -165,7 +172,7 @@ class DataTableResponder
 
     /**
      * @param Builder $query
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return LengthAwarePaginator
      */
     private function paginateQuery(Builder $query)
     {
@@ -173,8 +180,8 @@ class DataTableResponder
     }
 
     /**
-     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $results
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param LengthAwarePaginator $results
+     * @return LengthAwarePaginator
      */
     private function manipulateCollection($results)
     {
@@ -257,7 +264,7 @@ class DataTableResponder
     }
 
     /**
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function respond()
     {
