@@ -141,10 +141,16 @@ class DataTableResponder
      */
     private function buildQuery(Request $request)
     {
+        $query = $this->model->query();
+
+        $queryManipulator = $this->queryManipulator;
+
+        if ($queryManipulator) {
+            $queryManipulator($query);
+        }
+
         $orderByField = $request->get('orderByField');
         $orderByDirection = $request->get('orderByDirection');
-
-        $query = $this->model->query();
 
         if ($orderByField && $orderByDirection) {
             if (!in_array(strtolower($orderByDirection), ['asc', 'desc'])) {
@@ -159,12 +165,6 @@ class DataTableResponder
             } else {
                 $query->orderBy($orderByField, $orderByDirection);
             }
-        }
-
-        $queryManipulator = $this->queryManipulator;
-
-        if ($queryManipulator) {
-            $queryManipulator($query);
         }
 
         return $query;
