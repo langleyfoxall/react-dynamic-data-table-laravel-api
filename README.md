@@ -65,3 +65,31 @@ if (document.getElementById('example')) {
     ReactDOM.render(<Example />, document.getElementById('example'));
 }
 ```
+
+### Without a model
+
+Sometimes you need to create a table of data for which there is no model (and the data is some kind of aggregation, so a model would not be appropriate).
+
+```php
+use App\User;
+use Illuminate\Http\Request;
+use LangleyFoxall\ReactDynamicDataTableLaravelApi\DataTableResponder;
+
+class UsersController extends Controller
+{
+    public function dataTable(Request $request)
+    {
+        return (new DataTableResponder(DB::table('users')->select(['id', 'name']), $request))
+            ->query(function($query) {                                   // Optional, default: none
+                $query->where('name', 'like', 'B%');
+            })
+            ->collectionManipulator(function (Collection $collection) {  // Optional, default: none
+                $collection->map(function($user) {
+                    $user->name = title_case($user->name);
+                });
+            })
+            ->setPerPage(10)                                             // Optional, default: 15
+            ->respond();
+    }
+}
+```

@@ -4,6 +4,7 @@ namespace LangleyFoxall\ReactDynamicDataTableLaravelApi;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -20,6 +21,11 @@ class DataTableResponder
      * @var Model
      */
     private $model;
+
+    /**
+     * @var Builder
+     */
+    private $queryBuilder;
 
     /**
      * @var Request
@@ -54,21 +60,28 @@ class DataTableResponder
     /**
      * DataTableResponder constructor.
      *
-     * @param $className
+     * @param $classNameOrQueryBuilder
      * @param Request $request
      */
-    public function __construct($className, Request $request)
+    public function __construct($classNameOrQueryBuilder, Request $request)
     {
-        if (!class_exists($className)) {
-            throw new InvalidArgumentException('Provided class does not exist.');
+        if ($classNameOrQueryBuilder instanceof QueryBuilder) {
+            $this->model = null;
+            $this->queryBuilder = $classNameOrQueryBuilder;
+        } else {
+            if (!class_exists($classNameOrQueryBuilder)) {
+                throw new InvalidArgumentException('Provided class does not exist.');
+            }
+
+            $this->model = new $classNameOrQueryBuilder();
+            $this->queryBuilder = null;
+
+            if (!$this->model instanceof Model) {
+                throw new InvalidArgumentException('Provided class is not an Eloquent model.');
+            }
         }
 
-        $this->model = new $className();
         $this->request = $request;
-
-        if (!$this->model instanceof Model) {
-            throw new InvalidArgumentException('Provided class is not an Eloquent model.');
-        }
     }
 
     /**
@@ -141,7 +154,7 @@ class DataTableResponder
      */
     private function buildQuery(Request $request)
     {
-        $query = $this->model->query();
+        $query = $this->queryBuilder ?? $this->model->query();
 
         $queryManipulator = $this->queryManipulator;
 
@@ -171,10 +184,10 @@ class DataTableResponder
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|QueryBuilder $query
      * @return LengthAwarePaginator
      */
-    private function paginateQuery(Builder $query)
+    private function paginateQuery($query)
     {
         return $query->paginate($this->perPage);
     }
@@ -208,11 +221,11 @@ class DataTableResponder
      * `disallow_ordering_by` will always be overwritten
      * as it is managed internally
      * 
-     * @param Builder $query
+     * @param Builder|QueryBuilder $query
      * @param Collection $collection
      * @return array
      */
-    private function makeMeta(Builder $query, Collection $collection)
+    private function makeMeta($query, Collection $collection)
     {
         $meta = $this->meta;
         $out = [];
@@ -239,25 +252,28 @@ class DataTableResponder
      */
     private function disallowOrderingBy()
     {
-        $methods = get_class_methods($this->model);
         $customAttributes = [];
 
-        foreach($methods as $method) {
-            if (!preg_match('/^get(\w+)Attribute$/', $method, $matches)) {
-                continue;
+        if ($this->model !== null) {
+            $methods = get_class_methods($this->model);
+            
+            foreach($methods as $method) {
+                if (!preg_match('/^get(\w+)Attribute$/', $method, $matches)) {
+                    continue;
+                }
+
+                if (empty($matches[1])) {
+                    continue;
+                }
+
+                $customAttribute = Str::snake($matches[1]);
+
+                if (in_array($customAttribute, array_keys($this->orderByOverrides))) {
+                    continue;
+                }
+
+                $customAttributes[] = $customAttribute;
             }
-
-            if (empty($matches[1])) {
-                continue;
-            }
-
-            $customAttribute = Str::snake($matches[1]);
-
-            if (in_array($customAttribute, array_keys($this->orderByOverrides))) {
-                continue;
-            }
-
-            $customAttributes[] = $customAttribute;
         }
 
         return $customAttributes;
